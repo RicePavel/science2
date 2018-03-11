@@ -25,6 +25,8 @@ AppAsset::register($this);
     
     <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
     <link rel="stylesheet" href="/science2/web/bootstrap-3.3.7-dist/css/bootstrap.min.css" >
+    <link rel="stylesheet" href="/science2/web/css/my.css" >
+    
     <script src="/science2/web/bootstrap-3.3.7-dist/js/bootstrap.min.js" ></script>
     
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
