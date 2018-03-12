@@ -13,3 +13,11 @@ and open the template in the editor.
     margin: 20px 0 20px 0;
 }
 
+.contestImageInput {
+    width: 20px;
+}
+
+.test {
+    background-color: red;
+}
+

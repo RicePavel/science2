@@ -42,58 +42,84 @@
     
     ?>
     
-    <?= Html::beginForm('', '', ['class' => 'form-horizontal']) ?>
+    <?php
+    
+    $options = ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'];
+    if ($type == 'change') {
+        $options['id'] = 'changeContestForm';
+    } else if ($type == 'add') {
+        $option['id'] = 'addContestForm';
+    }
+    echo Html::beginForm('', '', $options);
+            
+    ?>
+    
+        <?php 
+        if ($type == 'add' && $addResult === false) {
+        ?>
+        <div class="alert alert-danger" role="alert"> 
+            <?= $addError ?>
+        </div>
+        <?php } ?>
+    
+        <?php 
+            if ($type == 'change' && $changeResult === false) {
+            ?>
+            <div class="alert alert-danger" role="alert"> 
+                <?= $changeError ?>
+            </div>
+        <?php } ?>
     
         <div class="form-group">
             <label class="col-md-3 control-label">Преподаватель</label>
             <div class="col-md-8">
-                <?= Html::beginTag('select', [name => 'ContestOrganisation[teacher_id]', 'class' => 'form-control']) ?>
+                <?= Html::beginTag('select', [name => 'Contest[teacher_id]', 'class' => 'form-control']) ?>
                 <?= Html::renderSelectOptions($model->teacher_id, $teachersArray) ?>  
                 <?= Html::endTag('select') ?>
             </div>
         </div>
     
         <div class="form-group">
-            <label class="col-md-3 control-label">Аудитория</label>
+            <label class="col-md-3 control-label">Целевая аудитория</label>
             <div class="col-md-8">
-                <?= Html::beginTag('select', [name => 'ContestOrganisation[audience_id]', 'class' => 'form-control']) ?>
+                <?= Html::beginTag('select', ['name' => 'Contest[audience_id]', 'class' => 'form-control']) ?>
                 <?= Html::renderSelectOptions($model->audience_id, $audiencesArray) ?>  
                 <?= Html::endTag('select') ?>
             </div>
         </div>
         
         <div class="form-group">
-            <label class="col-md-3 control-label">Название </label>
+            <label class="col-md-3 control-label">Название</label>
             <div class="col-md-8">
-                <?= Html::activeTextarea($model, 'name', ['class' => 'form-control']) ?>
+                <?= Html::activeTextarea($model, 'name', ['class' => 'form-control' /*, 'required' => ''*/]) ?>
             </div>
         </div>
         
         <div class="form-group">
-            <label class="col-md-3 control-label">Расположение </label> 
+            <label class="col-md-3 control-label">Место проведения</label> 
             <div class="col-md-8">
-                <?= Html::beginTag('select', [name => 'ContestOrganisation[location_id]', 'class' => 'form-control']) ?>
+                <?= Html::beginTag('select', ['name' => 'Contest[location_id]', 'class' => 'form-control']) ?>
                 <?= Html::renderSelectOptions($model->location_id, $locationsArray) ?>  
                 <?= Html::endTag('select') ?>
             </div>
         </div>
         
         <div class="form-group">
-            <label class="col-md-3 control-label">Дата начала </label>
+            <label class="col-md-3 control-label">Дата начала</label>
             <div class="col-md-8">
-                <?= Html::activeInput('text', $model, 'start_date', ['class' => 'form-control dateInput']) ?>
+                <input type="text" name="Contest[start_date]" value="<?= $model->start_date ?>" class="form-control dateInput" />
             </div>
         </div>
         
         <div class="form-group">
-            <label class="col-md-3 control-label">Дата завершения </label>
+            <label class="col-md-3 control-label">Дата окончания</label>
             <div class="col-md-8">
-                <?= Html::activeInput('text', $model, 'end_date', ['class' => 'form-control dateInput']) ?>
+                <input type="text" name="Contest[end_date]" value="<?= $model->end_date ?>" class="form-control dateInput" />
             </div>
         </div>
    
         <div class="form-group">
-            <label class="col-md-3 control-label">СОШ </label>
+            <label class="col-md-3 control-label">СОШ</label>
             <div class="col-md-8">
                 <?= Html::activeInput('text', $model, 'count_soh', ['class' => 'form-control']) ?>
             </div>
@@ -128,20 +154,35 @@
         </div>
         
         <div class="form-group">
-            <label class="col-md-3 control-label">География</label>
+            <label class="col-md-3 control-label">География участников</label>
             <div class="col-md-8">
                 <?= Html::activeInput('text', $model, 'geography', ['class' => 'form-control']) ?>
             </div>
         </div>
     
-        <?php
-            if ($model->contest_organisation_id) {
-                echo Html::hiddenInput('contest_organisation_id', $model->contest_organisation_id);
-            }
+        <div class="form-group">
+            <label class="col-md-3 control-label" >Файл</label>
+            <div class="col-md-8"> 
+                <input type="checkbox" class="contestFileCheckbox" name="report_exist" />
+                <input type="file" style="display: none;" class="contestFileInput" name="report" />
+            </div>
+        </div>
     
+        <?php
+            if ($model->contest_id) {
+                echo Html::hiddenInput('Contest[contest_id]', $model->contest_id, []);
+            } else {
+                echo Html::hiddenInput('Contest[contest_id]', '', []);
+            }
         ?>
         
-        <?= Html::hiddenInput('action', 'add') ?>
+        <?php
+            if ($type == 'add') {
+                echo Html::hiddenInput('action', 'add');
+            } else if ($type == 'change') {
+                echo Html::hiddenInput('action', 'change');
+            }
+        ?>
     
         <div class="form-group">
             <div class="col-md-offset-3 col-md-8">

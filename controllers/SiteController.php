@@ -12,7 +12,7 @@ use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\Locations;
 use app\models\Teachers;
-use app\models\ContestOrganisation;
+use app\models\Contest;
 
 class SiteController extends Controller
 {
