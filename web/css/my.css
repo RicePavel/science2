@@ -21,3 +21,26 @@ and open the template in the editor.
     background-color: red;
 }
 
+
+.locationList {
+    border: 1px solid #999;
+    padding-left: 0;
+    position: absolute;
+    z-index: 10;
+    background-color: white;
+    width: 100%;
+    
+    display: none;
+}
+
+.locationList li {
+    list-style-type: none;
+    margin-left: 0;
+    padding-left: 0;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.locationList li:hover {
+    background-color: #EBECE9;
+}

@@ -84,12 +84,35 @@
             </div>
         </div>
         
-        <div class="form-group">
+        <div class="form-group locationFormGroup">
             <label class="col-md-3 control-label">Место проведения</label> 
             <div class="col-md-8">
-                <?= Html::beginTag('select', ['name' => 'Contest[location_id]', 'class' => 'form-control']) ?>
-                <?= Html::renderSelectOptions($model->location_id, $locationsArray) ?>  
-                <?= Html::endTag('select') ?>
+                <div class="input-group">
+                <?php
+                    $locationName = '';
+                    foreach ($locations as $location) {
+                        if ($location->location_id == $model->location_id) {
+                            $locationName = $location->name;
+                            break;
+                        }
+                    }  
+                    ?>
+                    <input type="text" name="" class="form-control locationTextInput" value="<?= $locationName ?>" required />
+                    <span class="input-group-btn">
+                        <button class="btn btn-default locationRemoveButton" type="button" style="border-left:none;">
+                           <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 
+                        </button>
+                        <button class="btn btn-default locationDownButton" type="button">
+                            <span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>
+                        </button>
+                    </span>
+                </div>
+                <ul class="locationList">
+                    <?php foreach ($locations as $location) { ?>
+                    <li class="locationListElement" data-id="<?= $location->location_id ?>"><?= $location->name ?></li>
+                    <?php } ?>
+                </ul>
+                <input type="hidden" name="Contest[location_id]" value="<?= $model->location_id ?>" class="locationIdHiddenInput"  />
             </div>
         </div>
         
