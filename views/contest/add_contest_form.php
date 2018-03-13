@@ -44,30 +44,18 @@
     
     <?php
     
-    $options = ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'];
-    if ($type == 'change') {
-        $options['id'] = 'changeContestForm';
-    } else if ($type == 'add') {
-        $option['id'] = 'addContestForm';
-    }
+    $options = ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data', 'id' => 'addContestForm'];
+
     echo Html::beginForm('', '', $options);
             
     ?>
     
         <?php 
-        if ($type == 'add' && $addResult === false) {
+        if ($addResult === false) {
         ?>
         <div class="alert alert-danger" role="alert"> 
             <?= $addError ?>
         </div>
-        <?php } ?>
-    
-        <?php 
-            if ($type == 'change' && $changeResult === false) {
-            ?>
-            <div class="alert alert-danger" role="alert"> 
-                <?= $changeError ?>
-            </div>
         <?php } ?>
     
         <div class="form-group">
@@ -163,7 +151,7 @@
         <div class="form-group">
             <label class="col-md-3 control-label" >Файл</label>
             <div class="col-md-8"> 
-                <input type="checkbox" class="contestFileCheckbox" name="report_exist" />
+                <input type="checkbox" value="1" class="contestFileCheckbox" name="Contest[report_exist]" />
                 <input type="file" style="display: none;" class="contestFileInput" name="report" />
             </div>
         </div>
@@ -177,11 +165,9 @@
         ?>
         
         <?php
-            if ($type == 'add') {
+
                 echo Html::hiddenInput('action', 'add');
-            } else if ($type == 'change') {
-                echo Html::hiddenInput('action', 'change');
-            }
+   
         ?>
     
         <div class="form-group">

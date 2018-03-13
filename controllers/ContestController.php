@@ -15,13 +15,16 @@ use app\models\Teachers;
 use app\models\Contest;
 use yii\helpers\BaseJson;
 use app\helpers\DateFormat;
+use app\helpers\StringHelper;
 use yii\web\UploadedFile;
 
 class ContestController extends Controller {
     
     public $enableCsrfValidation = false;
     
-     public function behaviors()
+    private $FILE_DIR = '../upload/';
+    
+    public function behaviors()
     {
         return [
             'access' => [
@@ -113,11 +116,52 @@ class ContestController extends Controller {
         $ok = true;
         if (isset($_POST['Contest'])) {
             $model->setAttributes($_POST['Contest'], false);
+            if (!isset($_POST['Contest']['report_exist'])) {
+                $model->report_exist = false;
+            }
             ContestController::formatToSql($model);
             $ok = $model->save();
             ContestController::formatToWeb($model);
             if (!$ok) {
                 $error .= implode(', ', $model->getErrorSummary(true));
+                return;
+            }
+            if ($ok && !$model->report_exist && $model->report_server_name != null) {
+                $fileServerName = $model->report_server_name;
+                $model->report_name = null;
+                $model->report_server_name = null;
+                $ok = $model->save();
+                if (!$ok) {
+                    $error .= implode(', ', $model->getErrorSummary(true));
+                    return;
+                }
+                if ($ok && $fileServerName != null) {
+                    $ok = $this->deleteFile($model->contest_id, $fileServerName, $error);
+                    if (!ok) {
+                        return $ok;
+                    }
+                }
+            }
+            $reportDeleted = $_REQUEST['report_deleted'];
+            if ($reportDeleted) {
+                $fileServerName = $model->report_server_name;
+                $model->report_name = null;
+                $model->report_server_name = null;
+                $ok = $model->save();
+                if (!$ok) {
+                    $error .= implode(', ', $model->getErrorSummary(true));
+                    return;
+                }
+                if ($ok && $fileServerName != null) {
+                    $ok = $this->deleteFile($model->contest_id, $fileServerName, $error);
+                    if (!$ok) {
+                        return false;
+                    }
+                }
+            }
+            $uploadedFile = UploadedFile::getInstanceByName('report');
+            if ($model->report_exist && $uploadedFile != null) {
+               $ok = $this->saveFile($model, $uploadedFile, $error);
             }
         } else {
             $ok = false;
@@ -135,6 +179,31 @@ class ContestController extends Controller {
         ContestController::formatToWeb($model);
         $json = BaseJson::encode($model);
         echo $json;
+    }
+    
+    public function actionGet_change_form() {
+        $model = new Contest();
+        if (isset($_REQUEST['contest_id'])) {
+            $model = Contest::findOne($_REQUEST['contest_id']);
+        }
+        ContestController::formatToWeb($model);
+        return $this->renderPartial('change_contest_form', ['model' => $model]);
+    }
+    
+    public function actionGet_file() {
+        $contestId = $_REQUEST['contest_id'];
+        $reportServerName = $_REQUEST['report_server_name'];
+        
+        $pathToFile = $this->FILE_DIR . $contestId . '/' . $reportServerName;
+        
+        if (file_exists($pathToFile)) {
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/octet-stream");
+            header("Content-Type: application/download");
+            header("Content-Disposition: attachment; filename=" . $reportServerName);
+            header("Content-Transfer-Encoding: binary ");
+            readfile($pathToFile);
+        }
     }
     
     public function actionList() {    
@@ -162,7 +231,7 @@ class ContestController extends Controller {
             }
         }
         
-        $sql = 'SELECT audience.name as audience_name, locations.name as location_name, teachers.name as teacher_name, teachers.surname as teacher_surname, teachers.middlename as teacher_middlename, contest.contest_id, contest.name, contest.start_date, contest.end_date, contest.count_soh, contest.count_ssuz, contest.count_vuz, contest.geography, contest.report_exist, contest.count_member_perm, contest.count_member_othercity
+        $sql = 'SELECT audience.name as audience_name, locations.name as location_name, teachers.name as teacher_name, teachers.surname as teacher_surname, teachers.middlename as teacher_middlename, contest.contest_id, contest.name, contest.start_date, contest.end_date, contest.count_soh, contest.count_ssuz, contest.count_vuz, contest.geography, contest.report_exist, contest.count_member_perm, contest.count_member_othercity, contest.report_exist, contest.report_name, contest.report_server_name
             FROM contest as contest, audience, locations, teachers 
          WHERE
             contest.audience_id = audience.audience_id
@@ -179,7 +248,6 @@ class ContestController extends Controller {
     }
     
     private function addContest(&$error) {
-        
        $model = new Contest();
        $model->setAttributes($_POST['Contest'], false);
        ContestController::formatToSql($model);
@@ -194,16 +262,84 @@ class ContestController extends Controller {
        if ($ok && $model->report_exist == true) {
            $file = UploadedFile::getInstanceByName('report');
            if ($file !== null) {
-               /*
-               $path = '../upload/' . $model->contest_id . '/' . $file->name;
-               $ok = $file->saveAs($path);
+               $pathToDir = '../upload/' . $model->contest_id;
+               if (!file_exists($pathToDir)) {
+                   $ok = mkdir($pathToDir);
+                   if (!$ok) {
+                       $error = 'не удалось создать директорию для хранения файла';
+                       return false;
+                   }
+               }
+               $originalName = $file->name;
+               $translitName = StringHelper::translit($originalName);
+               $pathToFile = $pathToDir . '/' . $translitName;
+               $ok = $file->saveAs($pathToFile);
                if (!$ok) {
                    $error .= 'не удалось сохранить файл';
+                   return false;
                }
-               */
+               $model->report_name = $originalName;
+               $model->report_server_name = $translitName;
+               $ok = $model->save();
+               if (!$ok) {
+                   $error .= implode(', ', $model->getErrorSummary(true));
+               }
            }
        }
        return $ok;
+    }
+    
+    private function deleteFile($contestId, $fileServerName, &$error) {
+        $ok = true;
+        if ($fileServerName != null) {     
+            $pathToFile = $this->FILE_DIR . $contestId . '/' . $fileServerName;
+            if (file_exists($pathToFile)) {
+                $ok = unlink($pathToFile);
+                if (!ok) {
+                    $error = 'не удалось удалить файл';
+                    return $ok;
+                }
+            } else {
+                $error = 'файл не найден';
+                return false;
+            }           
+        } else {
+            $error = 'не задано имя файла';
+            return false;
+        }
+        return $ok;
+    }
+    
+    private function saveFile($model, $uploadedFile, &$error) {
+        if ($uploadedFile !== null) {
+               $ok = true;
+               $pathToDir = $this->FILE_DIR . $model->contest_id;
+               if (!file_exists($pathToDir)) {
+                   $ok = mkdir($pathToDir);
+                   if (!$ok) {
+                       $error = 'не удалось создать директорию для хранения файла';
+                       return $ok;
+                   }
+               }
+               $originalName = $uploadedFile->name;
+               $translitName = StringHelper::translit($originalName);
+               $pathToFile = $pathToDir . '/' . $translitName;
+               $ok = $uploadedFile->saveAs($pathToFile);
+               if (!$ok) {
+                   $error .= 'не удалось сохранить файл';
+                   return $ok;
+               }
+               $model->report_name = $originalName;
+               $model->report_server_name = $translitName;
+               $ok = $model->save();
+               if (!$ok) {
+                   $error = implode(', ', $model->getErrorSummary(true));
+               }
+               return $ok;
+        } else {
+            $error = 'не загружен файл';
+            return false;
+        }
     }
         
     /**

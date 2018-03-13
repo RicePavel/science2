@@ -47,7 +47,7 @@ use app\helpers\DateFormat;
                         <input type="hidden" name="action" value="delete" />
                         <input type="hidden" name="contest_id" value="<?= $contest['contest_id']?>" />
                     </form>
-                    <form method="POST" ng-submit="showChangeForm(<?= $contest['contest_id'] ?>)" >
+                    <form method="POST" onsubmit="showContestChangeForm(<?= $contest['contest_id']?>)" >
                         <input type="image" src="img/change.png" name="submit" value="Изменить" class="contestImageInput" />
                         <input type="hidden" name="contest_id" value="<?= $contest['contest_id']?>" />
                     </form>
@@ -61,7 +61,14 @@ use app\helpers\DateFormat;
                 <td>СОШ <?= $contest['count_soh']?> ССУЗ <?= $contest['count_ssuz']?> ВУЗ <?= $contest['count_vuz']?> </td>
                 <td>Из Перми <?= $contest['count_member_perm']?> Иногородних <?= $contest['count_member_othercity']?> </td>
                 <td><?= $contest['geography']?></td>
-                <td><?= $contest['report_exist']?></td>
+                <td>
+                    <input type="checkbox" <?= ($contest['report_exist'] ? 'checked' : '') ?> disabled name="file_exist"/><br/>
+                    <?php if ($contest['report_name']) {
+                        $fileUrl = Url::to(['contest/get_file', 'contest_id' => $contest['contest_id'], 'report_server_name' => $contest['report_server_name']]);
+                    ?>
+                    <a href="<?= $fileUrl ?>"><?= $contest['report_name']; ?></a>
+                    <?php } ?>
+                </td>
             </tr>
         <?php } ?>
     </table>
@@ -97,7 +104,7 @@ use app\helpers\DateFormat;
                     <h4 class="modal-title" id="myModalLabel">Добавление</h4>
                 </div>
                 <div class="modal-body">
-                    <?= $this->render('contestform', ['model' => $addModel, 'type' => 'add', 'addResult' => $addResult, 'addError' => $addError]) ?>
+                    <?= $this->render('add_contest_form', ['model' => $addModel, 'type' => 'add', 'addResult' => $addResult, 'addError' => $addError]) ?>
                 </div>
             </div>
         </div>
@@ -112,7 +119,11 @@ use app\helpers\DateFormat;
                     <h4 class="modal-title" id="myModalLabel">Изменение</h4>
                 </div>
                 <div class="modal-body">
-                    <?= $this->render('contestform', ['model' => $changeModel, 'type' => 'change', 'changeResult' => $changeResult, 'changeError' => $changeError]) ?>
+                    <?php 
+                    if ($changeResult === false) {
+                        echo $this->render('change_contest_form', ['model' => $changeModel, 'type' => 'change', 'changeResult' => $changeResult, 'changeError' => $changeError]);
+                    }
+                    ?>
                 </div>
             </div>
         </div>
