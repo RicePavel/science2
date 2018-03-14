@@ -244,14 +244,18 @@ class ContestController extends Controller {
         echo $json;
     }
     
-    /*
     public function actionDelete() {
         $error = '';
-        $ok = false;
+        $ok = true;
+        if (isset($_REQUEST['contest_id'])) {
+            $this->deleteContest($_REQUEST['contest_id']);
+        } else {
+            $ok = false;
+            $error = 'не передан ИД';
+        }
         $result = ['error' => $error, 'ok' => $ok];
         echo BaseJson::encode($result);
     }
-     */
     
     private function getContestArray() {
         /*

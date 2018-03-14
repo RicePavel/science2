@@ -91,7 +91,7 @@ use app\helpers\DateFormat;
         </tr>
             <tr ng-repeat="contest in contestArray">
                 <td>
-                    <form action="<?= $url ?>" method="POST" >
+                    <form  method="POST" ng-submit="deleteContest(contest['contest_id'])" >
                         <input type="image" src="img/delete.png" name="submit" value="Удалить" class="contestImageInput" />
                         <input type="hidden" name="action" value="delete" />
                         <input type="hidden" name="contest_id" value="{{contest['contest_id']}}" />

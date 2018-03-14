@@ -23,13 +23,7 @@ myApp.controller('contestController', function($scope, $http) {
     */
    
     
-    var url = '?r=contest/list_json';
-    $http({
-        method: 'GET',
-        url: url
-    }).then(function success(response) {
-        $scope.contestArray = response.data;
-    });
+    updateContestTable();
     
     $scope.sortTable = function(sorting) {
        var type = 'ASC';
@@ -51,6 +45,25 @@ myApp.controller('contestController', function($scope, $http) {
        });
     }
     
+    $scope.deleteContest = function(contestId) {
+        if (confirm('подтвердите удаление')) {
+            url = '?r=contest/delete&contest_id=' + contestId;
+            $http({
+                method: 'GET',
+                url: url
+            }).then(function success(response) {
+                var data = response.data;
+                if (data.ok) {
+                    updateContestTableWithSorting();
+                } else {
+                    alert(data.error);
+                }
+            }, function error(response) {
+
+            });
+        }
+    }
+    
     $scope.submitChangeForm = function(id) {
         showContestChangeForm(id);
     }
@@ -59,7 +72,32 @@ myApp.controller('contestController', function($scope, $http) {
         $scope.test = '2';
     }
     
+    function updateContestTable() {
+        var url = '?r=contest/list_json';
+        $http({
+            method: 'GET',
+            url: url
+        }).then(function success(response) {
+            $scope.contestArray = response.data;
+        });
+    }
     
+    function updateContestTableWithSorting() {
+        var url = '';
+        if ($scope.sorting !== undefined) {
+            url = '?r=contest/list_json&sorting=' + $scope.sorting + '&sorting_type=' + $scope.type;
+        } else {
+            url = '?r=contest/list_json';
+        }
+        $http({
+           method: 'GET',
+           url: url
+        }).then(function success(response) {
+          $scope.contestArray = response.data;
+        }, function error(response) {
+           
+        });
+    }
     
 });
 
