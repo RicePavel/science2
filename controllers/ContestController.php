@@ -17,6 +17,8 @@ use yii\helpers\BaseJson;
 use app\helpers\DateFormat;
 use app\helpers\StringHelper;
 use yii\web\UploadedFile;
+use yii\db\Query;
+use yii\helpers\Url;
 
 class ContestController extends Controller {
     
@@ -137,7 +139,7 @@ class ContestController extends Controller {
                 }
                 if ($ok && $fileServerName != null) {
                     $ok = $this->deleteFile($model->contest_id, $fileServerName, $error);
-                    if (!ok) {
+                    if (!$ok) {
                         return $ok;
                     }
                 }
@@ -231,6 +233,28 @@ class ContestController extends Controller {
             }
         }
         
+        $contestArray = $this->getContestArray();
+        
+        return $this->render('contest', ['contestArray' => $contestArray, 'addModel' => $addModel, 'changeModel' => $changeModel, 'addResult' => $addResult, 'addError' => $addError, 'changeResult' => $changeResult, 'changeError' => $changeError]);
+    }
+    
+    public function actionList_json() {
+        $contestArray = $this->getContestArray();
+        $json = BaseJson::encode($contestArray);
+        echo $json;
+    }
+    
+    /*
+    public function actionDelete() {
+        $error = '';
+        $ok = false;
+        $result = ['error' => $error, 'ok' => $ok];
+        echo BaseJson::encode($result);
+    }
+     */
+    
+    private function getContestArray() {
+        /*
         $sql = 'SELECT audience.name as audience_name, locations.name as location_name, teachers.name as teacher_name, teachers.surname as teacher_surname, teachers.middlename as teacher_middlename, contest.contest_id, contest.name, contest.start_date, contest.end_date, contest.count_soh, contest.count_ssuz, contest.count_vuz, contest.geography, contest.report_exist, contest.count_member_perm, contest.count_member_othercity, contest.report_exist, contest.report_name, contest.report_server_name
             FROM contest as contest, audience, locations, teachers 
          WHERE
@@ -238,8 +262,37 @@ class ContestController extends Controller {
             and contest.location_id = locations.location_id
             and contest.teacher_id = teachers.teacher_id ';
         $contestArray = Yii::$app->db->createCommand($sql)->queryAll();
-        
-        return $this->render('contest', ['contestArray' => $contestArray, 'addModel' => $addModel, 'changeModel' => $changeModel, 'addResult' => $addResult, 'addError' => $addError, 'changeResult' => $changeResult, 'changeError' => $changeError]);
+         * 
+         */
+        $query = new Query();
+        $query->select(['contest.*', 't.name as teacher_name', 't.surname as teacher_surname', 't.middlename as teacher_middlename',
+            'audience.name as audience_name', 'locations.name as location_name'])
+                ->from(['contest'])
+                ->innerJoin('teachers as t', 'contest.teacher_id = t.teacher_id')
+                ->innerJoin('audience', 'contest.audience_id = audience.audience_id')
+                ->innerJoin('locations', 'contest.location_id = locations.location_id');
+        $sorting = isset($_REQUEST['sorting']) ? $_REQUEST['sorting'] : '';
+        $sortingType = isset($_REQUEST['sorting_type']) ? $_REQUEST['sorting_type'] : '';
+        if ($sorting == 'teacher') {
+           $query->orderBy('t.surname' . ' ' . $sortingType); 
+        } else if ($sorting == 'audience') {
+           $query->orderBy('audience.name' . ' ' . $sortingType); 
+        } else if ($sorting == 'location') {
+           $query->orderBy('locations.name' . ' ' . $sortingType); 
+        } else if ($sorting !== '') {
+           $query->orderBy('contest.' . $sorting . ' ' . $sortingType); 
+        }
+        $contestArray = $query->all();
+        $contestArray[0]['file_url'] = '11';
+        foreach ($contestArray as $key => $row) {
+            $contestArray[$key]['start_date'] = DateFormat::toWebFormat($row['start_date']);
+            $contestArray[$key]['end_date'] = DateFormat::toWebFormat($row['end_date']);
+            if ($row['report_server_name'] != null) {
+                $fileUrl = Url::to(['contest/get_file', 'contest_id' => $row['contest_id'], 'report_server_name' => $row['report_server_name']]);
+                $contestArray[$key]['file_url'] = $fileUrl;
+            }
+        }
+        return $contestArray;
     }
 
     private function deleteContest($id) {
@@ -295,7 +348,7 @@ class ContestController extends Controller {
             $pathToFile = $this->FILE_DIR . $contestId . '/' . $fileServerName;
             if (file_exists($pathToFile)) {
                 $ok = unlink($pathToFile);
-                if (!ok) {
+                if (!$ok) {
                     $error = 'не удалось удалить файл';
                     return $ok;
                 }

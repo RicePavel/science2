@@ -62,7 +62,7 @@
         <div class="form-group">
             <label class="col-md-3 control-label">Преподаватель</label>
             <div class="col-md-8">
-                <?= Html::beginTag('select', [name => 'Contest[teacher_id]', 'class' => 'form-control']) ?>
+                <?= Html::beginTag('select', ['name' => 'Contest[teacher_id]', 'class' => 'form-control']) ?>
                 <?= Html::renderSelectOptions($model->teacher_id, $teachersArray) ?>  
                 <?= Html::endTag('select') ?>
             </div>

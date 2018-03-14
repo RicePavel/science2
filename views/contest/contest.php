@@ -24,7 +24,7 @@ use app\helpers\DateFormat;
         });
     </script>
     
-    <table class="table table-bordered" id="contestTable" >
+    <table class="table table-bordered" id="contestTable" style="display: none;" >
         <tr>
             <th> 
             </th>
@@ -73,6 +73,50 @@ use app\helpers\DateFormat;
         <?php } ?>
     </table>
          
+    
+    <table class="table table-bordered" id="contestTable" >
+        <tr>
+            <th> 
+            </th>
+            <th><a ng-click="sortTable('teacher')">Преподаватель</a></th>
+            <th><a ng-click="sortTable('audience')">Целевая аудитория</a></th>
+            <th><a ng-click="sortTable('name')">Название</a></th>
+            <th><a ng-click="sortTable('location')">Место проведения</a></th>
+            <th><a ng-click="sortTable('start_date')">Дата начала</a></th>
+            <th><a ng-click="sortTable('end_date')">Дата окончания</a></th>
+            <th>Количество учебных заведений, направивших участников</th>
+            <th>Количество участников</th>
+            <th><a ng-click="sortTable('geography')">География участников</a></th>
+            <th><a ng-click="sortTable('report_exist')">Наличие на кафедре отчета о мероприятии</a></th>
+        </tr>
+            <tr ng-repeat="contest in contestArray">
+                <td>
+                    <form action="<?= $url ?>" method="POST" >
+                        <input type="image" src="img/delete.png" name="submit" value="Удалить" class="contestImageInput" />
+                        <input type="hidden" name="action" value="delete" />
+                        <input type="hidden" name="contest_id" value="{{contest['contest_id']}}" />
+                    </form>
+                    <form method="POST" ng-submit="submitChangeForm(contest['contest_id'])"  >
+                        <input type="image" src="img/change.png" name="submit" value="Изменить" class="contestImageInput" />
+                        <input type="hidden" name="contest_id" value="{{contest['contest_id']}}" />
+                    </form>
+                </td>
+                <td>{{contest['teacher_surname']}} {{contest['teacher_name']}} {{$contest['teacher_middlename']}} </td>
+                <td>{{contest['audience_name']}}</td>
+                <td>{{contest['name']}}</td>
+                <td>{{contest['location_name']}}</td>
+                <td>{{contest['start_date']}}</td>
+                <td>{{contest['end_date']}}</td>
+                <td>СОШ {{contest['count_soh']}} ССУЗ {{contest['count_ssuz']}} ВУЗ {{contest['count_vuz']}} </td>
+                <td>Из Перми {{contest['count_member_perm']}} Иногородних {{contest['count_member_othercity']}} </td>
+                <td> {{contest['geography']}} </td>
+                <td>
+                    <input type='checkbox' disabled name="file_exist" ng-checked="contest['report_exist'] == 1" /> <br/>
+                    <a href="{{contest['file_url']}}" ng-if="contest['report_name']">{{contest['report_name']}}</a>
+                </td>
+            </tr>
+    </table>
+    
     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addFormModal" >
         Добавить
     </button>

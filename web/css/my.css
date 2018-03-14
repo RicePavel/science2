@@ -44,3 +44,7 @@ and open the template in the editor.
 .locationList li:hover {
     background-color: #EBECE9;
 }
+
+a {
+    cursor: pointer;
+}

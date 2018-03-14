@@ -15,5 +15,9 @@ class Contest extends ActiveRecord {
         );
     }
     
+    public function getTeacher() {
+        return $this->hasOne(Teachers::className(), ['teacher_id'=> 'teacher_id']);
+    }
+    
     
 }
