@@ -6,6 +6,7 @@ $(document).ready(function() {
     $('#changeFormModal').on('hidden.bs.modal', function(e) {
         $('#changeFormModal .alert-danger').hide(); 
     });
+    
     $('.contestFileCheckbox').on('change', function() {
         var fileInput = $(this).siblings('.contestFileInput');
         if ($(this).prop('checked')) {
@@ -143,5 +144,28 @@ function showContestChangeForm(contestId) {
             $('#changeFormModal').modal('show');
         }
     });
+}
+
+function submitTestFileForm(self) {
+    var formData = new FormData();
+    var fileInput = $(self).find('[name=myFile]');
+    var fileElem = fileInput[0];
+    var textInput = $(self).find('[name=myText]');
+    formData.append('myText', textInput.val());
+    if (fileElem.files.length) {
+        formData.append('myFile', fileElem.files[0]);
+    }
+    $.ajax({
+        url: '?r=contest/add_test',
+        data: formData,
+        type: 'POST',
+        dataType: 'json',
+        processData: false,
+        contentType: false,
+        success: function(reponse) {
+            console.log('success response');
+        }
+    });
+    return false;
 }
 

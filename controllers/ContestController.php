@@ -74,6 +74,26 @@ class ContestController extends Controller {
     {
         return $this->render('index');
     }
+    
+    public function actionAdd_test() {
+        $myText = $_REQUEST['myText'];
+        $myFile = UploadedFile::getInstanceByName('myFile');
+    }
+    
+    public function actionAdd() {
+        $ok = true;
+        $error = '';
+        if (isset($_POST['Contest']) && is_array($_POST['Contest'])) {
+            $contestParams = $_POST['Contest'];
+            $myFile = UploadedFile::getInstanceByName('report');
+            $ok = $this->addContest($contestParams, 'report', $error);
+        } else {
+            $ok = false;
+            $error = 'не переданы параметры';
+        }
+        $rerult = ['ok' => $ok, 'error' => $error];
+        echo BaseJson::encode($rerult);
+    }
 
     /**
      * Login action.
@@ -97,6 +117,7 @@ class ContestController extends Controller {
         ]);
     }
     
+    /*
     public function actionChangecontest() {
         
         $teachers = Teachers::find()->all();
@@ -113,8 +134,10 @@ class ContestController extends Controller {
             return $this->render('changecontest', ['model' => $model, 'locations' => $locations, 'audiences' => $audiences, 'teachers' => $teachers]);
         }
     }
+     * 
+     */
     
-    private function changeContest($model, &$error) {
+    private function changeContest($model, $reportDeleted, &$error) {
         $ok = true;
         if (isset($_POST['Contest'])) {
             $model->setAttributes($_POST['Contest'], false);
@@ -144,7 +167,6 @@ class ContestController extends Controller {
                     }
                 }
             }
-            $reportDeleted = $_REQUEST['report_deleted'];
             if ($reportDeleted) {
                 $fileServerName = $model->report_server_name;
                 $model->report_name = null;
@@ -181,6 +203,27 @@ class ContestController extends Controller {
         ContestController::formatToWeb($model);
         $json = BaseJson::encode($model);
         echo $json;
+    }
+    
+    public function actionGet_one_json_full() {
+       $model = new Contest();
+        if (isset($_REQUEST['contest_id'])) {
+            $id = $_REQUEST['contest_id'];
+            $model = Contest::findOne($id);
+        }
+        ContestController::formatToWeb($model);
+        $teachers = Teachers::find()->all();
+        $audiences = Audience::find()->all();
+        $locations = Locations::find()->all();
+        $fileUrl = '';
+        $contestId = (string) $model->contest_id;
+        $reportServerName = $model->report_server_name;
+        if ($reportServerName != null) {
+            $fileUrl = $this->getFileUrl($contestId, $reportServerName);
+        }
+        $result = ['contest' => $model, 'teachers' => $teachers, 'audiences' => $audiences, 'locations' => $locations, 'fileUrl' => $fileUrl];
+        $json = BaseJson::encode($result);
+        echo $json; 
     }
     
     public function actionGet_change_form() {
@@ -221,14 +264,15 @@ class ContestController extends Controller {
             if (isset($_POST['action'])) {
                 $action = $_POST['action'];
                 if ($action == 'add') {
-                    $addResult = $this->addContest($addError);
+                    $addResult = $this->addContest($_POST['Contest'], 'report', $addError);
                 } else if ($action == 'delete') {
                     $id = $_POST['contest_id'];
                     $this->deleteContest($id);
                 } else if ($action == 'change') {
                     $id = $_POST['Contest']['contest_id'];
                     $changeModel = Contest::findOne($id);
-                    $changeResult = $this->changeContest($changeModel, $changeError);
+                    $reportDeleted = $_REQUEST['report_deleted'];
+                    $changeResult = $this->changeContest($changeModel, $reportDeleted, $changeError);
                 }
             }
         }
@@ -238,10 +282,30 @@ class ContestController extends Controller {
         return $this->render('contest', ['contestArray' => $contestArray, 'addModel' => $addModel, 'changeModel' => $changeModel, 'addResult' => $addResult, 'addError' => $addError, 'changeResult' => $changeResult, 'changeError' => $changeError]);
     }
     
+    public function actionChange() {
+        $ok = true;
+        $error = '';
+        if (isset($_POST['Contest']) && is_array($_POST['Contest'])) {
+            $id = $_POST['Contest']['contest_id'];
+            $changeModel = Contest::findOne($id);
+            $reportDeleted = (isset($_REQUEST['report_deleted']) ? true : false);
+            $ok = $this->changeContest($changeModel, $reportDeleted, $error);
+        } else {
+            $ok = false;
+            $error = 'не переданы параметры';
+        }
+        $result = ['ok' => $ok, 'error' => $error];
+        echo BaseJson::encode($result);
+    }
+    
     public function actionList_json() {
         $contestArray = $this->getContestArray();
         $json = BaseJson::encode($contestArray);
-        echo $json;
+        $res = Yii::$app->getResponse();
+        $res->format = \yii\web\Response::FORMAT_JSON;
+        $res->data = $json;
+        $res->send();
+        //echo $json;
     }
     
     public function actionDelete() {
@@ -287,16 +351,21 @@ class ContestController extends Controller {
            $query->orderBy('contest.' . $sorting . ' ' . $sortingType); 
         }
         $contestArray = $query->all();
-        $contestArray[0]['file_url'] = '11';
         foreach ($contestArray as $key => $row) {
             $contestArray[$key]['start_date'] = DateFormat::toWebFormat($row['start_date']);
             $contestArray[$key]['end_date'] = DateFormat::toWebFormat($row['end_date']);
             if ($row['report_server_name'] != null) {
-                $fileUrl = Url::to(['contest/get_file', 'contest_id' => $row['contest_id'], 'report_server_name' => $row['report_server_name']]);
+                $contestId = $row['contest_id'];
+                $reportServerName = $row['report_server_name'];
+                $fileUrl = $this->getFileUrl($contestId, $reportServerName);
                 $contestArray[$key]['file_url'] = $fileUrl;
             }
         }
         return $contestArray;
+    }
+    
+    private function getFileUrl($contestId, $reportServerName) {
+        return Url::to(['contest/get_file', 'contest_id' => $contestId, 'report_server_name' => $reportServerName]);
     }
 
     private function deleteContest($id) {
@@ -304,7 +373,49 @@ class ContestController extends Controller {
         $contest->delete();
     }
     
-    private function addContest(&$error) {
+    private function addContest($paramsArray, $fileInputName, &$error) {
+       $model = new Contest();
+       $model->setAttributes($paramsArray, false);
+       ContestController::formatToSql($model);
+       $ok = $model->save();
+       ContestController::formatToWeb($model);
+       if (!$ok) {
+           $errorsArray = $model->errors;
+           foreach ($errorsArray as $secondArray) {
+               $error .= implode(', ', $secondArray);
+           }
+       }
+       if ($ok && $model->report_exist == true) {
+           $file = UploadedFile::getInstanceByName($fileInputName);
+           if ($file !== null) {
+               $pathToDir = '../upload/' . $model->contest_id;
+               if (!file_exists($pathToDir)) {
+                   $ok = mkdir($pathToDir);
+                   if (!$ok) {
+                       $error = 'не удалось создать директорию для хранения файла';
+                       return false;
+                   }
+               }
+               $originalName = $file->name;
+               $translitName = StringHelper::translit($originalName);
+               $pathToFile = $pathToDir . '/' . $translitName;
+               $ok = $file->saveAs($pathToFile);
+               if (!$ok) {
+                   $error .= 'не удалось сохранить файл';
+                   return false;
+               }
+               $model->report_name = $originalName;
+               $model->report_server_name = $translitName;
+               $ok = $model->save();
+               if (!$ok) {
+                   $error .= implode(', ', $model->getErrorSummary(true));
+               }
+           }
+       }
+       return $ok;
+    }
+    
+    private function addContest_1(&$error) {
        $model = new Contest();
        $model->setAttributes($_POST['Contest'], false);
        ContestController::formatToSql($model);

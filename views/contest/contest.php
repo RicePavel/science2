@@ -96,7 +96,7 @@ use app\helpers\DateFormat;
                         <input type="hidden" name="action" value="delete" />
                         <input type="hidden" name="contest_id" value="{{contest['contest_id']}}" />
                     </form>
-                    <form method="POST" ng-submit="submitChangeForm(contest['contest_id'])"  >
+                    <form method="POST" ng-submit="showChangeForm(contest['contest_id'], $event)"  >
                         <input type="image" src="img/change.png" name="submit" value="Изменить" class="contestImageInput" />
                         <input type="hidden" name="contest_id" value="{{contest['contest_id']}}" />
                     </form>
@@ -117,7 +117,7 @@ use app\helpers\DateFormat;
             </tr>
     </table>
     
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addFormModal" >
+    <button type="button" class="btn btn-primary" data-toggle="modal" ng-click="showAddForm()" >
         Добавить
     </button>
     
@@ -140,12 +140,12 @@ use app\helpers\DateFormat;
         </script>
     <?php } ?>
     
-    <div class="modal fade" id="addFormModal" role="dialog" >
+    <div class="modal fade" id="addFormModalNew" role="dialog" >
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="myModalLabel">Добавление</h4>
+                    <h4 class="modal-title">Добавление</h4>
                 </div>
                 <div class="modal-body">
                     <?= $this->render('add_contest_form', ['model' => $addModel, 'type' => 'add', 'addResult' => $addResult, 'addError' => $addError]) ?>
@@ -153,8 +153,26 @@ use app\helpers\DateFormat;
             </div>
         </div>
     </div>
-    
-    
+     
+    <div class="modal fade" id="changeFormModalNew" role="dialog" >
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Изменение</h4>
+                </div>
+                <div class="modal-body">
+                    <?php 
+
+                        echo $this->render('change_contest_form', ['model' => $changeModel, 'type' => 'change', 'changeResult' => $changeResult, 'changeError' => $changeError]);
+                    
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>    
+        
+    <?php if (false) { ?>
     <div class="modal fade" id="changeFormModal" role="dialog" >
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -172,7 +190,16 @@ use app\helpers\DateFormat;
             </div>
         </div>
     </div>
+    <?php } ?>
     
+    <br/>
+    <br/>
+    
+    <form action="" onsubmit="return submitTestFileForm(this)" style="display: none;" >
+        <input type="text" name="myText" />
+        <input type="file" name="myFile"  />
+        <input type="submit" name="submit" value="Отправить" />
+    </form>
     
     <br/>
     <br/>
