@@ -77,6 +77,13 @@ a {
     /* width: 250px !important; */
 }
 
+.contestTable input[type="text"], .contestTable select {
+    width: 100px;
+}
+
+
+
+
 .dropDownContainer input {
     width: 85px !important;
 }
@@ -85,10 +92,23 @@ a {
     margin-left: -5px;
 }
 
-.contestTable .input-group {
-    display: block;
+.dropDownContainer ul {
+    border: 1px solid #999;
+    padding-left: 0;
+    position: absolute;
+    z-index: 10;
+    background-color: white;
+    width: 250px;
 }
 
-.contestTable input[type="text"], .contestTable select {
-    width: 100px;
+.dropDownContainer li {
+    list-style-type: none;
+    margin-left: 0;
+    padding-left: 0;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.dropDownContainer li:hover {
+    background-color: #EBECE9;
 }
