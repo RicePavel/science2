@@ -35,6 +35,7 @@ AppAsset::register($this);
     <script src="js/angular_app/main.js" ></script>
     <script src="js/angular_app/controllers/contest.js" ></script>
     <script src="js/contest.js" ></script>
+    <script src="js/contest_form.js"></script>
     
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 

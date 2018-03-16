@@ -1,32 +1,11 @@
 
 myApp.controller('contestController', function($scope, $http) {
-    
-    /*
-    $scope.showChangeForm = function($id) {
-        var url = '?r=contest/get_one_json&contest_id=' + $id;
-        $http({
-            method: 'GET',
-            url: url
-        }).then(function success(response) {
-            var data = response.data;
-  
-            for (var key in data) {
-                var elem = $('#changeContestForm').find('[name="Contest[' + key + ']"]');
-                var value = data[key];
-                if (elem.length > 0 && value !== null) {
-                    elem.val(value);
-                }
-            }
-            $('#changeFormModal').modal('show');
-        });
-    }
-    */
-   
+      
     $scope.showAddForm = function() {
        $('#addFormModalNew').modal('show');
     }
    
-    updateContestTable();
+    
    
     $scope.submitAddForm = function($event) {
        var form = $($event.target);
@@ -113,39 +92,13 @@ myApp.controller('contestController', function($scope, $http) {
         $http({
             method: 'GET',
             url: url
-        }).then(function success(response) {
-            $scope.contestForChange = {};
-            $scope.contestForChangeExtra = {};
-            $scope.teachers = response.data.teachers;
-            $scope.audiences = response.data.audiences;
-            $scope.locations = response.data.locations;
-            var fileUrl = response.data.fileUrl;
+        }).then(function success(response) { 
             var model = response.data.contest;
-            for (var key in model) {
-                if (isNumeric(model[key])) {
-                    model[key] = String(model[key]);
-                }
-            }
-            if (model.report_exist === '1') {
-                model.report_exist = true;
-            } else {
-                model.report_exist = false;
-            }
-            for (var key in model) {
-                $scope.contestForChange[key] = model[key];   
-            }
-            var locationName = '';
-            for (var key in $scope.locations) {
-                var l = $scope.locations[key];
-                if (String(l.location_id) === String(model.location_id)) {
-                    locationName = l.name;
-                }
-            }
-            form.find('.locationIdHiddenInput').val(model.location_id);
-            $scope.contestForChangeExtra.locationName = locationName;
-            $scope.contestForChangeExtra.fileUrl = fileUrl;
-            $scope.contestForChangeExtra.reportDeleted = false;
-            $('#changeFormModalNew').modal('show');
+            var fileUrl = response.data.fileUrl;
+            var teachers = response.data.teachers;
+            var audiences = response.data.audiences;
+            var locations = response.data.locations;
+            $scope._loadDataIntoChangeForm(model, fileUrl, teachers, audiences, locations);
         }, function error(response) {
             
         });
@@ -158,25 +111,7 @@ myApp.controller('contestController', function($scope, $http) {
     }
     
     $scope.submitChangeForm = function($event) {
-       var form = $($event.target);
-       var formData = new FormData();
-       for (var key in $scope.contestForChange) {
-           var value = $scope.contestForChange[key];
-           if (value !== null) {
-               if (key === 'report_exist') {
-                   value = (value === true ? '1' : '0');
-               }
-               formData.append('Contest[' + key + ']', value);
-           }
-       }
-       formData.append('Contest[location_id]', form.find('.locationIdHiddenInput').val());
-       if ($scope.contestForChangeExtra.reportDeleted === true) {
-            formData.append('report_deleted', $scope.contestForChangeExtra.reportDeleted );
-       }
-       var fileElem = form.find('[name=report]')[0];
-       if (fileElem && fileElem.files.length) {
-           formData.append('report', fileElem.files[0]);
-       }
+       var formData = $scope._getDataFromChangeForm($event);
        $.ajax({
             url: '?r=contest/change',
             data: formData,
@@ -198,9 +133,83 @@ myApp.controller('contestController', function($scope, $http) {
        });
     }
     
-    $scope.testClick = function() {
-        $scope.test = '2';
+    $scope._updateAdditionalData = function() {
+        $http({
+            method: 'GET',
+            url: '?r=contest/get_additional_data'
+        }).then(function success(response) {
+            var data = $.parseJSON(response.data);
+            $scope.teachers = data.teachers;
+            $scope.audiences = data.audiences;
+            $scope.locations = data.locations;
+        }, function error() {
+            
+        });
     }
+    
+    $scope._getDataFromChangeForm = function($event) {
+       var form = $($event.target);
+       var formData = new FormData();
+       for (var key in $scope.contestForChange) {
+           var value = $scope.contestForChange[key];
+           if (value !== null) {
+               if (key === 'report_exist') {
+                   value = (value === true ? '1' : '0');
+               }
+               formData.append('Contest[' + key + ']', value);
+           }
+       }
+       formData.append('Contest[location_id]', form.find('.locationIdHiddenInput').val());
+       if ($scope.contestForChangeExtra.reportDeleted === true) {
+            formData.append('report_deleted', $scope.contestForChangeExtra.reportDeleted );
+       }
+       var fileElem = form.find('[name=report]')[0];
+       if (fileElem && fileElem.files.length) {
+           formData.append('report', fileElem.files[0]);
+       }
+       return formData;
+    }
+    
+    $scope._loadDataIntoChangeForm = function(model, fileUrl, teachers, audiences, locations) {
+        for (var key in model) {
+            if (isNumeric(model[key])) {
+                model[key] = String(model[key]);
+            }
+        }
+        if (model.report_exist === '1') {
+            model.report_exist = true;
+        } else {
+            model.report_exist = false;
+        }
+        
+        var locationName = '';
+        for (var key in locations) {
+            var l = locations[key];
+            if (String(l.location_id) === String(model.location_id)) {
+                locationName = l.name;
+            }
+        }
+        
+        $scope.teachers = teachers;
+        $scope.audiences = audiences;
+        $scope.locations = locations;
+        $scope.contestForChange = {};
+        $scope.contestForChangeExtra = {};
+        for (var key in model) {
+            $scope.contestForChange[key] = model[key];   
+        }
+        $scope.contestForChangeExtra.fileUrl = fileUrl;
+        $scope.contestForChangeExtra.reportDeleted = false;
+        $scope.contestForChangeExtra.locationName = locationName;
+        
+        var form = $('#changeContestForm');
+        form.find('.locationIdHiddenInput').val(model.location_id);
+       
+        $('#changeFormModalNew').modal('show');
+    }
+    
+    updateContestTable();
+    $scope._updateAdditionalData();
     
     function updateContestTable() {
         var url = '?r=contest/list_json';
@@ -232,13 +241,11 @@ myApp.controller('contestController', function($scope, $http) {
 });
 
 $(document).ready(function(){
-    /*
     $('#addFormModalNew').on('hidden.bs.modal', function(e) {
         var form = $('#addFormModalNew').find('form');
-        //form.find('input[type=text]').not('.locationTextInput').val('');
+        form.find('input[type=text]').not('.locationTextInput').val('');
         form.find('input[type=file]').val('');
     })
-    */
 });
 
 function isNumeric(n) {

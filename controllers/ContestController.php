@@ -75,11 +75,6 @@ class ContestController extends Controller {
         return $this->render('index');
     }
     
-    public function actionAdd_test() {
-        $myText = $_REQUEST['myText'];
-        $myFile = UploadedFile::getInstanceByName('myFile');
-    }
-    
     public function actionAdd() {
         $ok = true;
         $error = '';
@@ -116,26 +111,6 @@ class ContestController extends Controller {
             'model' => $model,
         ]);
     }
-    
-    /*
-    public function actionChangecontest() {
-        
-        $teachers = Teachers::find()->all();
-        $audiences = Audience::find()->all();
-        $locations = Locations::find()->all();
-        
-        if (isset($_POST['contest_id'])) {
-            $id = $_POST['contest_id'];
-            
-            $error = '';
-            $model = Contest::findOne($id);
-            changeContest($model, $error);
-            
-            return $this->render('changecontest', ['model' => $model, 'locations' => $locations, 'audiences' => $audiences, 'teachers' => $teachers]);
-        }
-    }
-     * 
-     */
     
     private function changeContest($model, $reportDeleted, &$error) {
         $ok = true;
@@ -226,6 +201,18 @@ class ContestController extends Controller {
         echo $json; 
     }
     
+    public function actionGet_additional_data() {
+        $teachers = Teachers::find()->all();
+        $audiences = Audience::find()->all();
+        $locations = Locations::find()->all();
+        $result = ['teachers' => $teachers, 'audiences' => $audiences, 'locations' => $locations];
+        $json = BaseJson::encode($result);
+        $response = Yii::$app->getResponse();
+        $response->format = Response::FORMAT_JSON;
+        $response->data = $json;
+        $response->send();
+    }
+    
     public function actionGet_change_form() {
         $model = new Contest();
         if (isset($_REQUEST['contest_id'])) {
@@ -305,7 +292,6 @@ class ContestController extends Controller {
         $res->format = \yii\web\Response::FORMAT_JSON;
         $res->data = $json;
         $res->send();
-        //echo $json;
     }
     
     public function actionDelete() {
@@ -322,16 +308,6 @@ class ContestController extends Controller {
     }
     
     private function getContestArray() {
-        /*
-        $sql = 'SELECT audience.name as audience_name, locations.name as location_name, teachers.name as teacher_name, teachers.surname as teacher_surname, teachers.middlename as teacher_middlename, contest.contest_id, contest.name, contest.start_date, contest.end_date, contest.count_soh, contest.count_ssuz, contest.count_vuz, contest.geography, contest.report_exist, contest.count_member_perm, contest.count_member_othercity, contest.report_exist, contest.report_name, contest.report_server_name
-            FROM contest as contest, audience, locations, teachers 
-         WHERE
-            contest.audience_id = audience.audience_id
-            and contest.location_id = locations.location_id
-            and contest.teacher_id = teachers.teacher_id ';
-        $contestArray = Yii::$app->db->createCommand($sql)->queryAll();
-         * 
-         */
         $query = new Query();
         $query->select(['contest.*', 't.name as teacher_name', 't.surname as teacher_surname', 't.middlename as teacher_middlename',
             'audience.name as audience_name', 'locations.name as location_name'])
@@ -349,6 +325,8 @@ class ContestController extends Controller {
            $query->orderBy('locations.name' . ' ' . $sortingType); 
         } else if ($sorting !== '') {
            $query->orderBy('contest.' . $sorting . ' ' . $sortingType); 
+        } else {
+            $query->orderBy('contest.contest_id ASC');
         }
         $contestArray = $query->all();
         foreach ($contestArray as $key => $row) {

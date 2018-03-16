@@ -14,6 +14,8 @@ use app\helpers\DateFormat;
     <?php 
        $url = Url::to(['contest/list']);
        $urlChangeContest = Url::to(['contest/changecontest']);
+       
+       $teachers = \app\models\Teachers::find()->all();
     ?>
 
 <div ng-controller="contestController" >
@@ -24,20 +26,77 @@ use app\helpers\DateFormat;
         });
     </script>
     
-    <table class="table table-bordered" id="contestTable" style="display: none;" >
+    <table class="contestTable">
         <tr>
-            <th> 
+            <td class="col_1"> 
+            </td>
+            <td class="col_2">
+                
+                <div class="dropDownContainer">
+                    <div>
+                        <input type="text" name="" value="" />
+                        <button><span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span> </button>
+                    </div>
+                    <ul>
+                        <?php foreach ($teachers as $t) {
+
+                             ?>
+                        <li data-id="<?= $t->teacher_id ?>" ><?= $t->surname ?> <?= $t->name ?> <?= $t->middlename ?></li>
+                        <?php } ?>
+                    </ul>
+                </div>
+                
+                <select ng-model="sortData.teacher_id">
+                    <option ng-repeat="t in teachers" value="{{t.teacher_id}}" >{{t.surname}} {{t.name}} {{t.middlename}}</option>
+                </select>
+            </td>
+            <td class="col_3">
+                <select ng-model="sortData.audience_id">
+                        <option ng-repeat="a in audiences" value="{{a.audience_id}}">{{a.name}}</option>
+                </select>
+            </td>
+            <td class="col_4"><input style="width:100px;" type="text" ng-model="sortData.name"/></td>
+            <td class="col_5">
+                <select ng-model="sortData.location_id">
+                    <option ng-repeat="l in locations" value="{{l.location_id}}">{{l.name}}</option>
+                </select>
+            </td>
+            <td class="col_6"><input type="text" ng-model="sortData.start_date" class="dateInput" /></td>
+            <td class="col_7"><input type="text" ng-model="sortData.end_date" class="dateInput" /></td>
+            <td class="col_8">
+                СОШ <br/>
+                <input type="text" ng-model="sortData.count_soh" /> <br/>
+                ССУЗ <br/>
+                <input type="text" ng-model="sortData.count_ssuz" /> <br/>
+                ВУЗ <br/> 
+                <input type="text" ng-model="sortData.count_vuz" /> <br/>
+            </td>
+            <td class="col_9">
+                Из Перми <br/>
+                <input type="text" ng-model="sortData.count_member_perm" /> <br/>
+                Иногородних <br/>
+                <input type="text" ng-model="sortData.count_member_othercity" /> <br/>
+            </td>
+            <td class="col_10"><input type="text" ng-model="sortData.geography" /> </td>
+            <td class="col_11"><input type="checkbox" ng-model="sortData.report_exist" /></td>
+        </tr>
+    </table>
+    
+    <table class="table table-bordered contestTable" id="contestTable" style="display: none;" >
+                        
+        <tr>
+            <th class="col_1"> 
             </th>
-            <th>Преподаватель</th>
-            <th>Целевая аудитория</th>
-            <th>Название</th>
-            <th>Место проведения</th>
-            <th>Дата начала</th>
-            <th>Дата окончания</th>
-            <th>Количество учебных заведений, направивших участников</th>
-            <th>Количество участников</th>
-            <th>География участников</th>
-            <th>Наличие на кафедре отчета о мероприятии</th>
+            <th class="col_2">Преподаватель</th>
+            <th class="col_3">Целевая аудитория</th>
+            <th class="col_4">Название</th>
+            <th class="col_5">Место проведения</th>
+            <th class="col_6">Дата начала</th>
+            <th class="col_7">Дата окончания</th>
+            <th class="col_8">Количество учебных заведений, направивших участников</th>
+            <th class="col_9">Количество участников</th>
+            <th class="col_10">География участников</th>
+            <th class="col_11">Наличие на кафедре отчета о мероприятии</th>
         </tr>
         <?php foreach ($contestArray as $contest) { ?>
             <tr>
@@ -74,23 +133,23 @@ use app\helpers\DateFormat;
     </table>
          
     
-    <table class="table table-bordered" id="contestTable" >
+    <table class="table table-bordered contestTable" id="contestTable" >
         <tr>
-            <th> 
+            <th class="col_1"> 
             </th>
-            <th><a ng-click="sortTable('teacher')">Преподаватель</a></th>
-            <th><a ng-click="sortTable('audience')">Целевая аудитория</a></th>
-            <th><a ng-click="sortTable('name')">Название</a></th>
-            <th><a ng-click="sortTable('location')">Место проведения</a></th>
-            <th><a ng-click="sortTable('start_date')">Дата начала</a></th>
-            <th><a ng-click="sortTable('end_date')">Дата окончания</a></th>
-            <th>Количество учебных заведений, направивших участников</th>
-            <th>Количество участников</th>
-            <th><a ng-click="sortTable('geography')">География участников</a></th>
-            <th><a ng-click="sortTable('report_exist')">Наличие на кафедре отчета о мероприятии</a></th>
+            <th class="col_2"><a ng-click="sortTable('teacher')">Преподаватель</a></th>
+            <th class="col_3"><a ng-click="sortTable('audience')">Целевая аудитория</a></th>
+            <th class="col_4"><a ng-click="sortTable('name')">Название</a></th>
+            <th class="col_5"><a ng-click="sortTable('location')">Место проведения</a></th>
+            <th class="col_6"><a ng-click="sortTable('start_date')">Дата начала</a></th>
+            <th class="col_7"><a ng-click="sortTable('end_date')">Дата окончания</a></th>
+            <th class="col_8">Количество учебных заведений, направивших участников</th>
+            <th class="col_9">Количество участников</th>
+            <th class="col_10"><a ng-click="sortTable('geography')">География участников</a></th>
+            <th class="col_11"><a ng-click="sortTable('report_exist')">Наличие на кафедре отчета о мероприятии</a></th>
         </tr>
             <tr ng-repeat="contest in contestArray">
-                <td>
+                <td class="col_1">
                     <form  method="POST" ng-submit="deleteContest(contest['contest_id'])" >
                         <input type="image" src="img/delete.png" name="submit" value="Удалить" class="contestImageInput" />
                         <input type="hidden" name="action" value="delete" />

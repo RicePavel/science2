@@ -48,3 +48,47 @@ and open the template in the editor.
 a {
     cursor: pointer;
 }
+
+.contestTable {
+    width: 0%;
+    table-layout: fixed;
+}
+
+.contestTable .col_1 {
+    width: 40px;
+    overflow: hidden;
+}
+
+.contestTable .col_2,
+.contestTable .col_3,
+.contestTable .col_4,
+.contestTable .col_5,
+.contestTable .col_6,
+.contestTable .col_7,
+.contestTable .col_8,
+.contestTable .col_9,
+.contestTable .col_10,
+.contestTable .col_11
+{
+    width: 120px;
+}
+
+.contestTable .col_2 {
+    /* width: 250px !important; */
+}
+
+.dropDownContainer input {
+    width: 85px !important;
+}
+
+.dropDownContainer button {
+    margin-left: -5px;
+}
+
+.contestTable .input-group {
+    display: block;
+}
+
+.contestTable input[type="text"], .contestTable select {
+    width: 100px;
+}
