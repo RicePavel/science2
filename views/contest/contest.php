@@ -26,13 +26,17 @@ use app\helpers\DateFormat;
         });
     </script>
     
+    <br/>
+    <br/>
+    <button type="button" class="showSelectionButton btn btn-default"  >Отбор <span class="glyphicon glyphicon-menu-down"></span></button>
+    <div class="selection" style="display: none;">
     <table class="contestTable">
         <tr>
             <td class="col_1"> 
             </td>
             <td class="col_2">
                 
-                <div class="dropDownContainer">
+                <div class="dropDownContainer" style="display: none;">
                     <div>
                         <input type="text" name="" value="" />
                         <button><span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span> </button>
@@ -46,41 +50,46 @@ use app\helpers\DateFormat;
                     </ul>
                 </div>
                 
-                <select ng-model="sortData.teacher_id">
+                <select ng-model="selectionData.teacher_id">
+                    <option value="">--</option>
                     <option ng-repeat="t in teachers" value="{{t.teacher_id}}" >{{t.surname}} {{t.name}} {{t.middlename}}</option>
                 </select>
             </td>
             <td class="col_3">
-                <select ng-model="sortData.audience_id">
+                <select ng-model="selectionData.audience_id">
+                <option value="">--</option>
                         <option ng-repeat="a in audiences" value="{{a.audience_id}}">{{a.name}}</option>
                 </select>
             </td>
-            <td class="col_4"><input style="width:100px;" type="text" ng-model="sortData.name"/></td>
+            <td class="col_4"><input style="width:100px;" type="text" ng-model="selectionData.name"/></td>
             <td class="col_5">
-                <select ng-model="sortData.location_id">
+                <select ng-model="selectionData.location_id">
+                    <option value="">--</option>
                     <option ng-repeat="l in locations" value="{{l.location_id}}">{{l.name}}</option>
                 </select>
             </td>
-            <td class="col_6"><input type="text" ng-model="sortData.start_date" class="dateInput" /></td>
-            <td class="col_7"><input type="text" ng-model="sortData.end_date" class="dateInput" /></td>
+            <td class="col_6"><input type="text" ng-model="selectionData.start_date" class="dateInput" /></td>
+            <td class="col_7"><input type="text" ng-model="selectionData.end_date" class="dateInput" /></td>
             <td class="col_8">
                 СОШ <br/>
-                <input type="text" ng-model="sortData.count_soh" /> <br/>
+                <input type="text" ng-model="selectionData.count_soh" /> <br/>
                 ССУЗ <br/>
-                <input type="text" ng-model="sortData.count_ssuz" /> <br/>
+                <input type="text" ng-model="selectionData.count_ssuz" /> <br/>
                 ВУЗ <br/> 
-                <input type="text" ng-model="sortData.count_vuz" /> <br/>
+                <input type="text" ng-model="selectionData.count_vuz" /> <br/>
             </td>
             <td class="col_9">
                 Из Перми <br/>
-                <input type="text" ng-model="sortData.count_member_perm" /> <br/>
+                <input type="text" ng-model="selectionData.count_member_perm" /> <br/>
                 Иногородних <br/>
-                <input type="text" ng-model="sortData.count_member_othercity" /> <br/>
+                <input type="text" ng-model="selectionData.count_member_othercity" /> <br/>
             </td>
-            <td class="col_10"><input type="text" ng-model="sortData.geography" /> </td>
-            <td class="col_11"><input type="checkbox" ng-model="sortData.report_exist" /></td>
+            <td class="col_10"><input type="text" ng-model="selectionData.geography" /> </td>
+            <td class="col_11"><input type="checkbox" ng-model="selectionData.report_exist" /></td>
         </tr>
     </table>
+        <button type="button" class="btn btn-primary" ng-click="applySelection()" >Применить отбор</button>
+    </div>
     
     <table class="table table-bordered contestTable" id="contestTable" style="display: none;" >
                         
@@ -147,8 +156,9 @@ use app\helpers\DateFormat;
             <th class="col_9">Количество участников</th>
             <th class="col_10"><a ng-click="sortTable('geography')">География участников</a></th>
             <th class="col_11"><a ng-click="sortTable('report_exist')">Наличие на кафедре отчета о мероприятии</a></th>
+            <th class="col_12"> </th>
         </tr>
-            <tr ng-repeat="contest in contestArray">
+            <tr ng-repeat="contest in contestArray" ng-class="(contest.in_rating == '1') ? '' : 'not_in_rating' " >
                 <td class="col_1">
                     <form  method="POST" ng-submit="deleteContest(contest['contest_id'])" >
                         <input type="image" src="img/delete.png" name="submit" value="Удалить" class="contestImageInput" />
@@ -173,6 +183,7 @@ use app\helpers\DateFormat;
                     <input type='checkbox' disabled name="file_exist" ng-checked="contest['report_exist'] == 1" /> <br/>
                     <a href="{{contest['file_url']}}" ng-if="contest['report_name']">{{contest['report_name']}}</a>
                 </td>
+                <td> <input type="image" src="{{contest['in_rating'] == '1' ? 'img/Enabled.png' : 'img/Disabled.png'}}" class="inRatingButton" title="{{contest['in_rating'] == '1' ? 'не учитывать в рейтинге' : 'учитывать в рейтинге'}}" ng-click="changeInRating(contest)"  /> </td>
             </tr>
     </table>
     

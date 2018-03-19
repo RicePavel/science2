@@ -39,7 +39,7 @@ myApp.controller('contestController', function($scope, $http) {
                 if (obj.ok) {
                     $('#addFormModalNew').modal('hide');
                     $scope.addContestModel = {};
-                    updateContestTableWithSorting();
+                    updateContestTableWithParameters();
                 } else {
                    alert(obj.error); 
                 }
@@ -48,6 +48,16 @@ myApp.controller('contestController', function($scope, $http) {
     }
     
     $scope.sortTable = function(sorting) {
+       var type = 'ASC';
+       if ($scope.sorting === sorting) {
+           if ($scope.type === 'ASC') {
+               type = 'DESC';
+           }
+       } 
+       $scope.sorting = sorting;
+       $scope.type = type;
+       updateContestTableWithParameters();
+        /*
        var type = 'ASC';
        if ($scope.sorting === sorting) {
            if ($scope.type === 'ASC') {
@@ -65,6 +75,7 @@ myApp.controller('contestController', function($scope, $http) {
        }, function error(response) {
            
        });
+        */
     }
     
     $scope.deleteContest = function(contestId) {
@@ -76,7 +87,7 @@ myApp.controller('contestController', function($scope, $http) {
             }).then(function success(response) {
                 var data = response.data;
                 if (data.ok) {
-                    updateContestTableWithSorting();
+                    updateContestTableWithParameters();
                 } else {
                     alert(data.error);
                 }
@@ -125,12 +136,16 @@ myApp.controller('contestController', function($scope, $http) {
                     $('#changeFormModalNew').modal('hide');
                     $scope.contestForChange = {};
                     $scope.contestForChangeExtra = {};
-                    updateContestTableWithSorting();
+                    updateContestTableWithParameters();
                 } else {
                    alert(obj.error); 
                 }
             }
        });
+    }
+    
+    $scope.applySelection = function() {
+        
     }
     
     $scope._updateAdditionalData = function() {
@@ -208,20 +223,74 @@ myApp.controller('contestController', function($scope, $http) {
         $('#changeFormModalNew').modal('show');
     }
     
-    updateContestTable();
+    $scope.updateContestTable = function() {
+        
+    }
+    
+    $scope._getDataForUpdate = function() {
+       var data = {};
+       if ($scope.sorting !== undefined) {
+            data.sorting = $scope.sorting;
+            data.sorting_type = $scope.type;
+       }
+       var selectionData = $scope.selectionData;
+       if (selectionData) {
+           for (var key in selectionData) {
+               var value = selectionData[key];
+               
+               if (value === true) {
+                   value = '1';
+               }
+               if (value === false) {
+                   continue;
+               }
+               
+               if (value !== null && value !== undefined && value !== '') {
+                   data['selection[' + key + ']'] = value;
+               }
+           }
+       }
+       return data;
+    };
+    
+    $scope._getDataForUpdateInString = function() {
+        var data = $scope._getDataForUpdate();
+        var str = '';
+        var idx = 0;
+        for (var key in data) {
+            str += '&' + key + '=' + data[key];
+            idx++;
+        }
+        return str;
+    }
+    
+    $scope.applySelection = function() {
+        updateContestTableWithParameters();
+    }
+    
+    updateContestTableWithParameters();
     $scope._updateAdditionalData();
     
-    function updateContestTable() {
-        var url = '?r=contest/list_json';
+    $scope.changeInRating = function(contest) {
+        var id = contest.contest_id;
+        var url = '?r=contest/change_in_rating&contest_id=' + id;
         $http({
             method: 'GET',
             url: url
         }).then(function success(response) {
-            $scope.contestArray = $.parseJSON(response.data);;
+            var data = $.parseJSON(response.data);
+            if (data.ok) {
+                contest.in_rating = data.in_rating;
+            } else {
+                alert(data.error);
+            }
+        }, function error(response){
+            
         });
     }
     
-    function updateContestTableWithSorting() {
+    function updateContestTableWithParameters() {
+        /*
         var url = '';
         if ($scope.sorting !== undefined) {
             url = '?r=contest/list_json&sorting=' + $scope.sorting + '&sorting_type=' + $scope.type;
@@ -236,6 +305,31 @@ myApp.controller('contestController', function($scope, $http) {
         }, function error(response) {
            
         });
+        */
+       
+        /*
+        var url = '?r=contest/list_json';
+        var data = $scope._getDataForUpdate();
+        $http({
+           method: 'POST',
+           url: url,
+           data: data
+        }).then(function success(response) {
+          $scope.contestArray = $.parseJSON(response.data);
+        }, function error(response) {
+           
+        });
+        */
+       var url = '?r=contest/list_json';
+       url += $scope._getDataForUpdateInString();
+       $http({
+           method: 'GET',
+           url: url
+       }).then(function success(response) {
+           $scope.contestArray = $.parseJSON(response.data);
+       }, function error(response) {
+           
+       });
     }
     
 });

@@ -264,7 +264,10 @@ class ContestController extends Controller {
             }
         }
         
-        $contestArray = $this->getContestArray();
+        $sorting = isset($_REQUEST['sorting']) ? $_REQUEST['sorting'] : '';
+        $sortingType = isset($_REQUEST['sorting_type']) ? $_REQUEST['sorting_type'] : '';
+        $selectionArray = [];
+        $contestArray = $this->getContestArray($sorting, $sortingType, $selectionArray);
         
         return $this->render('contest', ['contestArray' => $contestArray, 'addModel' => $addModel, 'changeModel' => $changeModel, 'addResult' => $addResult, 'addError' => $addError, 'changeResult' => $changeResult, 'changeError' => $changeError]);
     }
@@ -285,8 +288,45 @@ class ContestController extends Controller {
         echo BaseJson::encode($result);
     }
     
+    public function actionChange_in_rating() {
+        $ok = true;
+        $error = '';
+        if (isset($_REQUEST['contest_id'])) {
+            $id = $_REQUEST['contest_id'];
+            $model = Contest::findOne($id);
+            $inRating = '';
+            if ($model->in_rating) {
+                $model->in_rating = false;
+                $inRating = '0';
+            } else {
+                $model->in_rating = true;
+                $inRating = '1';
+            }
+            $ok = $model->save();
+            if (!$ok) {
+                $error = implode(', ', $model->getErrorSummary($showAllErrors));
+            }
+        }
+        $result = ['ok' => $ok, 'error' => $error, 'in_rating' => $inRating];
+        $this->sendInJsonFormat($result);
+    }
+    
+    private function sendInJsonFormat($data) {
+        $json = BaseJson::encode($data);
+        $res = Yii::$app->getResponse();
+        $res->format = Response::FORMAT_JSON;
+        $res->data = $json;
+        $res->send();
+    }
+    
     public function actionList_json() {
-        $contestArray = $this->getContestArray();
+        $sorting = isset($_REQUEST['sorting']) ? $_REQUEST['sorting'] : '';
+        $sortingType = isset($_REQUEST['sorting_type']) ? $_REQUEST['sorting_type'] : '';
+        $selectionArray = [];
+        if (isset($_REQUEST['selection'])) {
+            $selectionArray = $_REQUEST['selection'];
+        }
+        $contestArray = $this->getContestArray($sorting, $sortingType, $selectionArray);
         $json = BaseJson::encode($contestArray);
         $res = Yii::$app->getResponse();
         $res->format = \yii\web\Response::FORMAT_JSON;
@@ -307,7 +347,14 @@ class ContestController extends Controller {
         echo BaseJson::encode($result);
     }
     
-    private function getContestArray() {
+    /**
+     * 
+     * @param String $sorting
+     * @param String $sortingType
+     * @param Array $selectionArray
+     * @return type
+     */
+    private function getContestArray($sorting, $sortingType, $selectionArray) {
         $query = new Query();
         $query->select(['contest.*', 't.name as teacher_name', 't.surname as teacher_surname', 't.middlename as teacher_middlename',
             'audience.name as audience_name', 'locations.name as location_name'])
@@ -315,8 +362,12 @@ class ContestController extends Controller {
                 ->innerJoin('teachers as t', 'contest.teacher_id = t.teacher_id')
                 ->innerJoin('audience', 'contest.audience_id = audience.audience_id')
                 ->innerJoin('locations', 'contest.location_id = locations.location_id');
-        $sorting = isset($_REQUEST['sorting']) ? $_REQUEST['sorting'] : '';
-        $sortingType = isset($_REQUEST['sorting_type']) ? $_REQUEST['sorting_type'] : '';
+        if (is_array($selectionArray)) {
+            foreach ($selectionArray as $key => $value) {
+                $stringCondition = 'contest.' . $key . ' = :' . $key;
+                $query->andWhere($stringCondition, [$key => $value]);
+            }
+        }
         if ($sorting == 'teacher') {
            $query->orderBy('t.surname' . ' ' . $sortingType); 
         } else if ($sorting == 'audience') {
@@ -328,6 +379,7 @@ class ContestController extends Controller {
         } else {
             $query->orderBy('contest.contest_id ASC');
         }
+        
         $contestArray = $query->all();
         foreach ($contestArray as $key => $row) {
             $contestArray[$key]['start_date'] = DateFormat::toWebFormat($row['start_date']);
@@ -355,6 +407,7 @@ class ContestController extends Controller {
        $model = new Contest();
        $model->setAttributes($paramsArray, false);
        ContestController::formatToSql($model);
+       $model->in_rating = true;
        $ok = $model->save();
        ContestController::formatToWeb($model);
        if (!$ok) {

@@ -73,6 +73,19 @@ a {
     width: 120px;
 }
 
+.contestTable .col_12 {
+    width: 35px;
+}
+
+.inRatingButton {
+    width:20px;
+}
+
+.inRatingButton, .inRatingButton:active {
+    outline: 0;
+    outline-offset: 0;
+}
+
 .contestTable .col_2 {
     /* width: 250px !important; */
 }
@@ -111,4 +124,10 @@ a {
 
 .dropDownContainer li:hover {
     background-color: #EBECE9;
+}
+
+
+
+.not_in_rating {
+    color: gray;
 }

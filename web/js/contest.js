@@ -6,8 +6,14 @@ $(document).ready(function() {
     $('#changeFormModal').on('hidden.bs.modal', function(e) {
         $('#changeFormModal .alert-danger').hide(); 
     });
-    
+    /**
+     * показать отбор
+     */
+    $('.showSelectionButton').click(function() {
+        $('.selection').toggle();
+    });
 });
+
 
 
 
