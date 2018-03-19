@@ -144,10 +144,6 @@ myApp.controller('contestController', function($scope, $http) {
        });
     }
     
-    $scope.applySelection = function() {
-        
-    }
-    
     $scope._updateAdditionalData = function() {
         $http({
             method: 'GET',
@@ -250,6 +246,8 @@ myApp.controller('contestController', function($scope, $http) {
                }
            }
        }
+       data.paginationExist = $scope.paginationExist;
+       data.pageNumber = $scope.pageNumber;
        return data;
     };
     
@@ -265,9 +263,12 @@ myApp.controller('contestController', function($scope, $http) {
     }
     
     $scope.applySelection = function() {
+        $scope.pageNumber = 1;
         updateContestTableWithParameters();
     }
     
+    $scope.paginationExist = '1';
+    $scope.pageNumber = 1;
     updateContestTableWithParameters();
     $scope._updateAdditionalData();
     
@@ -289,44 +290,42 @@ myApp.controller('contestController', function($scope, $http) {
         });
     }
     
-    function updateContestTableWithParameters() {
-        /*
-        var url = '';
-        if ($scope.sorting !== undefined) {
-            url = '?r=contest/list_json&sorting=' + $scope.sorting + '&sorting_type=' + $scope.type;
-        } else {
-            url = '?r=contest/list_json';
+    $scope.nextPage = function() {
+        if ($scope.pageNumbersArray !== undefined) {
+            var maxNumber = $scope.pageNumbersArray[$scope.pageNumbersArray.length - 1];
+            if ($scope.pageNumber !== undefined && $scope.pageNumber < maxNumber) {
+                $scope.pageNumber++;
+                updateContestTableWithParameters();
+            }
         }
-        $http({
-           method: 'GET',
-           url: url
-        }).then(function success(response) {
-          $scope.contestArray = $.parseJSON(response.data);
-        }, function error(response) {
-           
-        });
-        */
-       
-        /*
-        var url = '?r=contest/list_json';
-        var data = $scope._getDataForUpdate();
-        $http({
-           method: 'POST',
-           url: url,
-           data: data
-        }).then(function success(response) {
-          $scope.contestArray = $.parseJSON(response.data);
-        }, function error(response) {
-           
-        });
-        */
+    }
+    
+    $scope.prevPage = function() {
+        if ($scope.pageNumber !== undefined && $scope.pageNumber > 1) {
+            $scope.pageNumber--;
+            updateContestTableWithParameters();
+        }
+    }
+    
+    $scope.showPage = function(number) {
+        $scope.pageNumber = number;
+        updateContestTableWithParameters();
+    }
+    
+    function updateContestTableWithParameters() {
        var url = '?r=contest/list_json';
        url += $scope._getDataForUpdateInString();
        $http({
            method: 'GET',
            url: url
        }).then(function success(response) {
-           $scope.contestArray = $.parseJSON(response.data);
+           var data = $.parseJSON(response.data);
+           $scope.contestArray = data.contestArray;
+           var pageCount = data.pageCount;
+           $scope.pageNumbersArray = [];
+           for (var i = 1; i <= pageCount; i++) {
+               $scope.pageNumbersArray.push(i);
+           }
        }, function error(response) {
            
        });

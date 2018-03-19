@@ -19,12 +19,15 @@ use app\helpers\StringHelper;
 use yii\web\UploadedFile;
 use yii\db\Query;
 use yii\helpers\Url;
+use yii\data\Pagination;
 
 class ContestController extends Controller {
     
     public $enableCsrfValidation = false;
     
     private $FILE_DIR = '../upload/';
+    
+    const pageSize = 5;
     
     public function behaviors()
     {
@@ -267,7 +270,7 @@ class ContestController extends Controller {
         $sorting = isset($_REQUEST['sorting']) ? $_REQUEST['sorting'] : '';
         $sortingType = isset($_REQUEST['sorting_type']) ? $_REQUEST['sorting_type'] : '';
         $selectionArray = [];
-        $contestArray = $this->getContestArray($sorting, $sortingType, $selectionArray);
+        $contestArray = [];
         
         return $this->render('contest', ['contestArray' => $contestArray, 'addModel' => $addModel, 'changeModel' => $changeModel, 'addResult' => $addResult, 'addError' => $addError, 'changeResult' => $changeResult, 'changeError' => $changeError]);
     }
@@ -326,8 +329,20 @@ class ContestController extends Controller {
         if (isset($_REQUEST['selection'])) {
             $selectionArray = $_REQUEST['selection'];
         }
-        $contestArray = $this->getContestArray($sorting, $sortingType, $selectionArray);
-        $json = BaseJson::encode($contestArray);
+        $result = [];
+        $paginationExist = false;
+        $pageNumber = 1;
+        if (isset($_REQUEST['paginationExist']) && $_REQUEST['paginationExist'] == '1') {
+            $paginationExist = true;
+            
+        }
+        if (isset($_REQUEST['pageNumber']) && $_REQUEST['pageNumber']) {
+            $pageNumber = $_REQUEST['pageNumber'];
+        }
+        $searchResult = $this->getContestArray($sorting, $sortingType, $selectionArray, $paginationExist, $pageNumber);
+        $result['contestArray'] = $searchResult['contestArray'];
+        $result['pageCount'] = $searchResult['pageCount'];
+        $json = BaseJson::encode($result);
         $res = Yii::$app->getResponse();
         $res->format = \yii\web\Response::FORMAT_JSON;
         $res->data = $json;
@@ -354,7 +369,9 @@ class ContestController extends Controller {
      * @param Array $selectionArray
      * @return type
      */
-    private function getContestArray($sorting, $sortingType, $selectionArray) {
+    private function getContestArray($sorting, $sortingType, $selectionArray, $paginationExist = false, $pageNumber = 0) {
+        $result = [];
+        $pageCount = 1;
         $query = new Query();
         $query->select(['contest.*', 't.name as teacher_name', 't.surname as teacher_surname', 't.middlename as teacher_middlename',
             'audience.name as audience_name', 'locations.name as location_name'])
@@ -380,7 +397,16 @@ class ContestController extends Controller {
             $query->orderBy('contest.contest_id ASC');
         }
         
-        $contestArray = $query->all();
+        if ($paginationExist) {
+            $countQuery = clone $query;
+            $pages = new Pagination(['totalCount' => $countQuery->count(), 'pageSize' => self::pageSize, 'page' => ((int) $pageNumber) - 1]);
+            $offset = $pages->offset;
+            $limit = $pages->limit;
+            $contestArray = $query->offset($offset)->limit($limit)->all();
+            $pageCount = $pages->pageCount;
+        } else {        
+            $contestArray = $query->all();
+        }
         foreach ($contestArray as $key => $row) {
             $contestArray[$key]['start_date'] = DateFormat::toWebFormat($row['start_date']);
             $contestArray[$key]['end_date'] = DateFormat::toWebFormat($row['end_date']);
@@ -391,7 +417,9 @@ class ContestController extends Controller {
                 $contestArray[$key]['file_url'] = $fileUrl;
             }
         }
-        return $contestArray;
+        $result['contestArray'] = $contestArray;
+        $result['pageCount'] = $pageCount;
+        return $result;
     }
     
     private function getFileUrl($contestId, $reportServerName) {

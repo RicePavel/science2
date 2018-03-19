@@ -187,6 +187,26 @@ use app\helpers\DateFormat;
             </tr>
     </table>
     
+    <nav ng-if="paginationExist">
+        <ul class="pagination">
+            <li>
+                <a aria-label="Previous" ng-click="prevPage()">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <li ng-repeat="p in pageNumbersArray" ng-class="(p === pageNumber ? 'active' : '')">
+                <a ng-click="showPage(p)">{{p}}</a>
+            </li>
+            <li>
+                <a aria-label="Next" ng-click="nextPage()">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+  
+    <br/>
+    
     <button type="button" class="btn btn-primary" data-toggle="modal" ng-click="showAddForm()" >
         Добавить
     </button>
